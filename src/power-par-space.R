@@ -35,3 +35,11 @@ for (rr in 1:nrow(p.space)){
 }
 
 
+# combine results
+p.space <- cbind(p.space, e.size = e.size, p.value = p.value)
+
+# visualise effect size
+library(plotly)
+plot_ly(p.space[p.space$K==50,], x = ~m, y = ~r, z = ~e.size, color = ~e.size, type = "scatter3d", mode = "markers")
+plot_ly(p.space[p.space$K==50 & p.space$p.value!=0,], x = ~m, y = ~r, z = ~p.value, color = ~p.value, type = "scatter3d", mode = "markers")
+plot_ly(p.space[p.space$r==30,], x = ~m, y = ~K, z = ~e.size, color = ~e.size, type = "scatter3d", mode = "markers")
