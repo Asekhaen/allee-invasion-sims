@@ -39,11 +39,13 @@ reproduction <- function(state, r, t, x){
     n.o <- n.f * r # make offspring
   }
   state$N.prime[t, ] <- breed(t) 
+  n.a.x <- 2*state$N.prime[t, ] # number of alleles to sample at each x
   for (ll in 1:n.l){
     state$p.prime[t, ,ll] <- rbinom(n = x, 
-                                    size = 2*state$N.prime[t, ], 
-                                    prob = state$p[t, ,ll])/(2*state$N.prime[t, ])
+                                    size = n.a.x, 
+                                    prob = state$p[t, ,ll])/n.a.x
     state$p.prime[t, ,ll] <- ifelse(!is.finite(state$p.prime[t, ,ll]), 0, state$p.prime[t, ,ll])
+    #cat("p.prime ", state$p.prime[t, ,ll], "\n")
   }
   state
 }
@@ -57,6 +59,7 @@ death <- function(state, K, t, x){
   state$N.prime[t, ] <- ifelse(state$N.prime[t, ] > K, K, state$N.prime[t, ]) # truncate at K
   # cat("surviving ", state$N.prime[t, ], "\n")
   state$p.prime[t, ,] <- (state$p.prime[t, ,]*(1-state$p.prime[t, ,]))/(1-state$p.prime[t, ,]^2) # deterministic reduction in p (selection)
+  state$p.prime[t, ,] <- ifelse(!is.finite(state$p.prime[t, ,]), 1, state$p.prime[t, ,]) # catch fixation
   state
 }
 
@@ -66,7 +69,8 @@ dispersal <- function(state, d, m, t, x){
   #browser()
   for (ll in 1:n.l){
     # stochastic sample of p into the migrant pool
-    drift.sample <- rbinom(x, round(m*state$N.prime[t, ]), state$p.prime[t, ,ll])/round(m*state$N.prime[t, ])
+    n.x <- round(m*state$N.prime[t, ])
+    drift.sample <- rbinom(x, n.x, state$p.prime[t, ,ll])/n.x
     #cat("\t drift sample: ", drift.sample, "\n")
     drift.sample <- ifelse(!is.finite(drift.sample), 0, drift.sample)
     state$p.prime[t, ,ll] <- (d %*% (state$N.prime[t, ] * drift.sample))/(d %*% state$N.prime[t,])
