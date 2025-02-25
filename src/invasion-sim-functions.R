@@ -90,9 +90,9 @@ dispersal <- function(state, d, m, t, x){
 # a function to pull them all together
 one_gen <- function(state, d, K, m, n.l, r, t, x){
   state <- state |> 
-    reproduction(n.l, r, t, x) |>
-    death(K, t, x) |>
-    dispersal(d, m, t, x)
+    reproduction(n.l = n.l, r = r, t = t, x = x) |>
+    death(K = K, t = t, x = x) |>
+    dispersal(d = d, m = m, t = t, x = x)
   state
 }
 
@@ -108,11 +108,23 @@ plot_sim <- function(state, g){
           lwd = 0.5*1:g)
 }
 
-all_gens <- function(d, g, K, m, n.l, p.0, r, x, plot = TRUE){
-  states <- state_vars(g, n.l)
-  states <- initialise(states, K, n.l, p.0)
+all_gens <- function(g, K, m, n.l, p.0, r, x, plot = TRUE){
+  states <- state_vars(g = g, 
+                       n.l = n.l)
+  states <- initialise(states, 
+                       K = K, 
+                       n.l = n.l, 
+                       p.0 = p.0)
+  d <- make_transition_matrix(m = m, x = x) # make the transition matrix
   for (tt in 1:(g-1)){
-    states <- one_gen(state = states, d, K, m, n.l, r, t = tt, x)
+    states <- one_gen(state = states, 
+                      d = d, 
+                      K = K, 
+                      m = m, 
+                      n.l = n.l, 
+                      r = r, 
+                      t = tt, 
+                      x = x)
     #cat("state", states$N[tt,], "\n")
   }
   # the invasion over time
@@ -120,10 +132,17 @@ all_gens <- function(d, g, K, m, n.l, p.0, r, x, plot = TRUE){
   states
 }
 
-rep_runs <- function(d, g, K, m, n.l, p.0, r, x, reps = 10){
+rep_runs <- function(g, K, m, n.l, p.0, r, x, reps = 10){
   extent <- vector(length = reps)
   for (rr in 1:reps){
-    out <- all_gens(d, g, K, m, n.l, p.0, r, x, plot = FALSE)
+    out <- all_gens(g = g, 
+                    K = K, 
+                    m = m, 
+                    n.l = n.l, 
+                    p.0 = p.0, 
+                    r = r, 
+                    x = x, 
+                    plot = FALSE)
     ex.rep <- which(out$N[nrow(out$N),] > 0) # get extent
     if (length(ex.rep)==0){
       extent[rr] <- 0
