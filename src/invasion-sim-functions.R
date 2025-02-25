@@ -1,7 +1,7 @@
 # Functions for running the invasion sims under a genetic Allee effect
 
 # make the dispersal transition matrix
-make_transition_matrix <- function(x, m){
+make_transition_matrix <- function(m, x){
   d <- matrix(0, nrow = x, ncol = x) # a dispersal transition matrix
   m <- m
   diag(d) <- 1-m
@@ -12,26 +12,26 @@ make_transition_matrix <- function(x, m){
   d
 }
 
-state_vars <- function(){
+state_vars <- function(g, n.l){
   N <- N.prime <- matrix(0, nrow = g, ncol = g) #columns are space, rows are time
   p <- p.prime <- array(0, dim = c(g, g, n.l)) # space, time, loci
   list(N=N, N.prime = N.prime, p = p, p.prime = p.prime)
 }
 
 # initialise the population
-initialise <- function(state){
+initialise <- function(state, K, n.l, p.0){
   state$N[1,1] <- 50
   state$p[1, 1,] <- rbinom(n.l, 2*K, p.0)/(2*K) # initial founder effect
   state
 }
 
 # takes population sizes and allele frequencies and returns offspring values
-reproduction <- function(state, t){
+reproduction <- function(state, r, t, x){
   N.total <- sum(state$N[t, ])
   if (N.total == 0) return(state)
   # takes a time and returns realised number of females at that time
   n_fem <- function(t) {
-    rbinom(n = g, size = state$N[t,], prob = 0.5)   
+    rbinom(n = x, size = state$N[t,], prob = 0.5)   
   }
   # takes a vector of N_t and returns number of offspring
   breed <- function(t) {
@@ -49,7 +49,7 @@ reproduction <- function(state, t){
 }
 
 # kills homozygous offspring
-death <- function(state, t){
+death <- function(state, K, t, x){
   surv <- 1-state$p.prime[t, ,]^2 
   surv.x <- apply(surv, 1, prod) # assuming independent assortment
   #cat("survival ", surv.x, "\n")
@@ -60,7 +60,7 @@ death <- function(state, t){
   state
 }
 
-dispersal <- function(state, t){
+dispersal <- function(state, d, m, t, x){
   N.total <- sum(state$N.prime[t,])
   if (N.total == 0) return(state)
   #browser()
@@ -84,31 +84,31 @@ dispersal <- function(state, t){
 }
 
 # a function to pull them all together
-one_gen <- function(state, par, t){
+one_gen <- function(state, d, K, m, n.l, r, t, x){
   state <- state |> 
-    reproduction(t) |>
-    death(t) |>
-    dispersal(t)
+    reproduction(r, t, x) |>
+    death(K, t, x) |>
+    dispersal(d, m, t, x)
   state
 }
 
 # to plot them at any given time
-plot_sim <- function(state){
+plot_sim <- function(state, g){
   matplot(1:g, t(state$N), 
           type = "l", 
           lty = 1, 
           col = "grey50", 
           bty = "l",
           ylab = "Population size",
-          xlab = "Patch number")
+          xlab = "Patch number", 
+          lwd = 0.5*1:g)
 }
 
-all_gens <- function(par, plot = TRUE){
-  list2env(par, envir = parent.frame()) # make parameters available
-  states <- state_vars()
-  states <- initialise(states)
-  for (tt in 1:(par$g-1)){
-    states <- one_gen(state = states, par = par.list, t = tt)
+all_gens <- function(d, g, K, m, n.l, p.0, r, x, plot = TRUE){
+  states <- state_vars(g, n.l)
+  states <- initialise(states, K, n.l, p.0)
+  for (tt in 1:(g-1)){
+    states <- one_gen(state = states, d, K, m, n.l, r, t = tt, x)
     #cat("state", states$N[tt,], "\n")
   }
   # the invasion over time
@@ -116,11 +116,10 @@ all_gens <- function(par, plot = TRUE){
   states
 }
 
-rep_runs <- function(par, reps = 10){
-  list2env(par, envir = parent.frame()) # make parameters available
+rep_runs <- function(d, g, K, m, n.l, p.0, r, x, reps = 10){
   extent <- vector(length = reps)
   for (rr in 1:reps){
-    out <- all_gens(par, plot = FALSE)
+    out <- all_gens(d, g, K, m, n.l, p.0, r, x, plot = FALSE)
     ex.rep <- which(out$N[nrow(out$N),] > 0) # get extent
     if (length(ex.rep)==0){
       extent[rr] <- 0
