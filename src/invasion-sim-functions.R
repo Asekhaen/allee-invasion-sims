@@ -26,7 +26,7 @@ initialise <- function(state, K, n.l, p.0){
 }
 
 # takes population sizes and allele frequencies and returns offspring values
-reproduction <- function(state, r, t, x){
+reproduction <- function(state, n.l, r, t, x){
   N.total <- sum(state$N[t, ])
   if (N.total == 0) return(state)
   # takes a time and returns realised number of females at that time
@@ -90,7 +90,7 @@ dispersal <- function(state, d, m, t, x){
 # a function to pull them all together
 one_gen <- function(state, d, K, m, n.l, r, t, x){
   state <- state |> 
-    reproduction(r, t, x) |>
+    reproduction(n.l, r, t, x) |>
     death(K, t, x) |>
     dispersal(d, m, t, x)
   state
