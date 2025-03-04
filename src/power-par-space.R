@@ -63,3 +63,11 @@ ggplot(p.space, aes(x = m, y = r, fill = power)) +
   labs(title = "Power for varying K, r, and m -- n = 20") +
   theme_minimal()
 ggsave(filename = "out/power-k-n20.png")
+
+ggplot(p.space, aes(x = m, y = r, fill = e.size)) +
+  geom_tile() +
+  scale_fill_viridis_c() +
+  facet_wrap(~K) +
+  labs(title = "Effect size for varying K, r, and m -- n = 20") +
+  theme_minimal()
+ggsave(filename = "out/e-size-k-n20.png")
