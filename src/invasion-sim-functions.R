@@ -1,5 +1,10 @@
 # Functions for running the invasion sims under a genetic Allee effect
 
+# Reproductive stochasticity...DONE
+# Full power analysis... to do
+# Foundering 30 v 50
+# full anova p-value on the interaction..
+
 # make the dispersal transition matrix
 make_transition_matrix <- function(m, x){
   d <- matrix(0, nrow = x, ncol = x) # a dispersal transition matrix
@@ -38,7 +43,7 @@ reproduction <- function(state, n.l, r, t, x){
     n.f <- n_fem(t)
     n.o <- n.f * r # make offspring
   }
-  state$N.prime[t, ] <- breed(t) 
+  state$N.prime[t, ] <- rpois(n = length(state$N.prime[t, ]), lambda = breed(t))
   n.a.x <- 2*state$N.prime[t, ] # number of alleles to sample at each x
   for (ll in 1:n.l){
     state$p.prime[t, ,ll] <- rbinom(n = x, 
