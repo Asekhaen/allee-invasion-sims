@@ -9,4 +9,4 @@ K <- 50
 m <- 0.2
 d <- make_transition_matrix(m = m, x = x)
 
-rep_runs(d = d, g = g, K = K, m = m, n.l = n.l, p.0 = p.0, r = r, x = x, reps = 10)
+rep_runs(g = g, K = K, m = m, n.l = n.l, p.0 = p.0, r = r, x = x, reps = 10)
