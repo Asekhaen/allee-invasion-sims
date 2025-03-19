@@ -13,10 +13,11 @@ make_transition_matrix <- function(m, x){
   d[cbind(1:(x-1), 2:(x))] <- m/2
   d[cbind(2:(x), 1:(x-1))] <- m/2
   d[1,1] <- 1-m/2 # reflective boundaries
-  d[10,10] <- 1-m/2
+  d[x,x] <- 1-m/2
   d
 }
 
+# make state variables
 state_vars <- function(g, n.l){
   N <- N.prime <- matrix(0, nrow = g, ncol = g) #columns are space, rows are time
   p <- p.prime <- array(0, dim = c(g, g, n.l)) # space, time, loci
@@ -25,7 +26,7 @@ state_vars <- function(g, n.l){
 
 # initialise the population
 initialise <- function(state, K, n.l, p.0){
-  state$N[1,1] <- 50
+  state$N[1,1] <- K
   state$p[1, 1,] <- rbinom(n.l, 2*K, p.0)/(2*K) # initial founder effect
   state
 }
@@ -42,6 +43,7 @@ reproduction <- function(state, n.l, r, t, x){
   breed <- function(t) {
     n.f <- n_fem(t)
     n.o <- n.f * r # make offspring
+    n.o
   }
   state$N.prime[t, ] <- rpois(n = length(state$N.prime[t, ]), lambda = breed(t))
   n.a.x <- 2*state$N.prime[t, ] # number of alleles to sample at each x
@@ -92,7 +94,7 @@ dispersal <- function(state, d, m, t, x){
   state
 }
 
-# a function to pull them all together
+# a function to pull them all together and advance the population by one generation
 one_gen <- function(state, d, K, m, n.l, r, t, x){
   state <- state |> 
     reproduction(n.l = n.l, r = r, t = t, x = x) |>
@@ -113,6 +115,7 @@ plot_sim <- function(state, g){
           lwd = 0.5*1:g)
 }
 
+# runs an experiment over g generations and returns state at the end of g generations
 all_gens <- function(g, K, m, n.l, p.0, r, x, plot = TRUE){
   states <- state_vars(g = g, 
                        n.l = n.l)
@@ -137,8 +140,9 @@ all_gens <- function(g, K, m, n.l, p.0, r, x, plot = TRUE){
   states
 }
 
+# A function which runs replicates of an invasion under a given scenario
 rep_runs <- function(g, K, m, n.l, p.0, r, x, reps = 10){
-  extent <- vector(length = reps)
+  extent <- vector(length = reps) # vector to take extent of spread for each rep
   for (rr in 1:reps){
     out <- all_gens(g = g, 
                     K = K, 
