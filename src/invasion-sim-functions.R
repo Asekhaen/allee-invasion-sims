@@ -65,7 +65,7 @@ death <- function(state, K, t, x){
   state$N.prime[t, ] <- rbinom(x, state$N.prime[t, ], surv.x) #stochastic survival
   state$N.prime[t, ] <- ifelse(state$N.prime[t, ] > K, K, state$N.prime[t, ]) # truncate at K
   # cat("surviving ", state$N.prime[t, ], "\n")
-  state$p.prime[t, ,] <- (state$p.prime[t, ,]*(1-state$p.prime[t, ,]))/(1-state$p.prime[t, ,]^2) # deterministic reduction in p (selection)
+  state$p.prime[t, ,] <- (2*state$p.prime[t, ,]*(1-state$p.prime[t, ,]))/(1-state$p.prime[t, ,]^2) # deterministic reduction in p (selection)
   state$p.prime[t, ,] <- ifelse(!is.finite(state$p.prime[t, ,]), 1, state$p.prime[t, ,]) # catch fixation
   state
 }
@@ -76,7 +76,7 @@ dispersal <- function(state, d, m, t, x){
   #browser()
   for (ll in 1:n.l){
     # stochastic sample of p into the migrant pool
-    n.x <- round(m*state$N.prime[t, ])
+    n.x <- round(2*m*state$N.prime[t, ])
     drift.sample <- rbinom(x, n.x, state$p.prime[t, ,ll])/n.x
     #cat("\t drift sample: ", drift.sample, "\n")
     drift.sample <- ifelse(!is.finite(drift.sample), 0, drift.sample)
